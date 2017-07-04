@@ -21,6 +21,20 @@ io.on('connection',(socket)=>{
         console.log("disconnected to server");
 
     });
+
+
+
+
+    socket.on('createMessage',(message)=>{
+
+        io.emit('newMessage',{
+
+            from:message.from,
+            text:message.text,
+            createdAt:new Date()
+        });
+    });
+
 });
 
 
