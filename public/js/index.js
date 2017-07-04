@@ -12,9 +12,11 @@ socket.on('disconnect',function(){
 });
 
 socket.on('newMessage',function(email){
-    console.log("New Message",email);
+
+    var createdTime=moment(email.createdAt).format('h:mm a');
+
     var li=jQuery('<li></li>');
-    li.text(`${email.from} : ${email.text}`);
+    li.text(`${email.from} ${createdTime}: ${email.text}`);
     jQuery('#messages').append(li);
 
 });
@@ -22,24 +24,67 @@ socket.on('newMessage',function(email){
 
 
 
-jQuery('#message-form').on('submit',function (e) {
+socket.on('newLocationMessage',function(message){
 
-    e.preventDefault();
+    var createdTime=moment(message.createdAt).format('h:mm a');
+    var li=jQuery('<li></li>');
+    var a=jQuery('<a target="_blank">My Current Location</a>');
 
-    socket.emit("createMessage",{
+    li.text(`${message.from} ${createdTime}:`);
+    a.attr('href',message.url);
+    li.append(a);
 
-        'from':'User',
-        'text':jQuery('#message').val(),
-
-    },function () {
-
-
-    });
-
+    jQuery('#messages').append(li);
 
 });
 
 
+jQuery('#message-form').on('submit',function (e) {
+
+    e.preventDefault();
+
+    var messageBox=jQuery('#message');
+
+    socket.emit("createMessage",{
+
+        'from':'User',
+        'text':messageBox.val(),
+
+    },function () {
+
+        messageBox.val('')
+
+
+    });
+
+});
+
+var locationButton=jQuery('#sendlocation');
+
+locationButton.on('click',function () {
+
+    if(!navigator.geolocation){
+
+        return alert('Geolocation not supported by your browser');
+    }
+
+    locationButton.attr("disabled",'disabled').text('Sending location...');;
+    navigator.geolocation.getCurrentPosition(function (possition) {
+
+        locationButton.removeAttr('disabled').text('Send Location');
+        socket.emit("createLocationMsg",{
+            latitude:possition.coords.latitude,
+            longitude:possition.coords.longitude
+        });
+
+
+    },function () {
+
+        locationButton.removeAttr('disabled').text('Send Location');
+        alert('Unable to fetch location');
+    });
+
+});
 
 
 
