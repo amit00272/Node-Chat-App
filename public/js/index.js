@@ -1,6 +1,25 @@
 
 var socket=io();
 
+function scrollTobottom() {
+
+  var messages=jQuery('#messages');
+  var newMessage=messages.children('li:last-child');
+
+
+  var clientHeight=messages.prop('clientHeight');
+  var scrollTop=messages.prop('scrollTop');
+  var scrollHeight=messages.prop('scrollHeight');
+  var newMessageHeight=newMessage.innerHeight();
+  var lastMessageHeight=newMessage.prev().innerHeight();
+
+  if(clientHeight+scrollTop+newMessageHeight+lastMessageHeight >= scrollHeight){
+      messages.scrollTop(scrollHeight);
+  }
+
+}
+
+
 socket.on('connect',function(){
     console.log("connected to server");
 
@@ -11,13 +30,20 @@ socket.on('disconnect',function(){
 
 });
 
-socket.on('newMessage',function(email){
+socket.on('newMessage',function(message){
 
-    var createdTime=moment(email.createdAt).format('h:mm a');
+  var createdTime=moment(message.createdAt).format('h:mm a');
+  var templete=jQuery('#message-templete').html();
+  var html=Mustache.render(templete,{
 
-    var li=jQuery('<li></li>');
-    li.text(`${email.from} ${createdTime}: ${email.text}`);
-    jQuery('#messages').append(li);
+      text:message.text,
+      from:message.from,
+      createdAt:createdTime
+  });
+
+  jQuery('#messages').append(html);
+
+  scrollTobottom();
 
 });
 
@@ -27,15 +53,16 @@ socket.on('newMessage',function(email){
 socket.on('newLocationMessage',function(message){
 
     var createdTime=moment(message.createdAt).format('h:mm a');
-    var li=jQuery('<li></li>');
-    var a=jQuery('<a target="_blank">My Current Location</a>');
+    var templete=jQuery('#location-message-templete').html();
+    var html=Mustache.render(templete,{
 
-    li.text(`${message.from} ${createdTime}:`);
-    a.attr('href',message.url);
-    li.append(a);
+        url:message.url,
+        from:message.from,
+        createdAt:createdTime
+    });
 
-    jQuery('#messages').append(li);
-
+    jQuery('#messages').append(html);
+    scrollTobottom();
 });
 
 
